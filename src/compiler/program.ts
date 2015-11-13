@@ -1129,9 +1129,6 @@ namespace ts {
                 if (options.mapRoot) {
                     programDiagnostics.add(createCompilerDiagnostic(Diagnostics.Option_0_cannot_be_specified_with_option_1, "mapRoot", "inlineSourceMap"));
                 }
-                if (options.sourceRoot) {
-                    programDiagnostics.add(createCompilerDiagnostic(Diagnostics.Option_0_cannot_be_specified_with_option_1, "sourceRoot", "inlineSourceMap"));
-                }
             }
 
             if (options.moduleResolution === ModuleResolutionKind.BaseUrl) {
@@ -1179,6 +1176,9 @@ namespace ts {
                 if (!options.sourceMap && !options.inlineSourceMap) {
                     programDiagnostics.add(createCompilerDiagnostic(Diagnostics.Option_inlineSources_can_only_be_used_when_either_option_inlineSourceMap_or_option_sourceMap_is_provided));
                 }
+                if (options.sourceRoot) {
+                    programDiagnostics.add(createCompilerDiagnostic(Diagnostics.Option_0_cannot_be_specified_with_option_1, "sourceRoot", "inlineSources"));
+                }
             }
 
             if (options.out && options.outFile) {
@@ -1190,10 +1190,9 @@ namespace ts {
                 if (options.mapRoot) {
                     programDiagnostics.add(createCompilerDiagnostic(Diagnostics.Option_0_cannot_be_specified_without_specifying_option_1, "mapRoot", "sourceMap"));
                 }
-                if (options.sourceRoot) {
+                if (options.sourceRoot && !options.inlineSourceMap) {
                     programDiagnostics.add(createCompilerDiagnostic(Diagnostics.Option_0_cannot_be_specified_without_specifying_option_1, "sourceRoot", "sourceMap"));
                 }
-                return;
             }
 
             const languageVersion = options.target || ScriptTarget.ES3;
