@@ -59,7 +59,6 @@ class CompilerBaselineRunner extends RunnerBase {
             let rootDir: string;
 
             let result: Harness.Compiler.CompilerResult;
-            let program: ts.Program;
             let options: ts.CompilerOptions;
             // equivalent to the files that will be passed on the command line
             let toBeCompiled: Harness.Compiler.TestFile[];
@@ -107,12 +106,11 @@ class CompilerBaselineRunner extends RunnerBase {
                     });
                 }
 
-                const output = Harness.Compiler.HarnessCompiler.compileFiles(
-                    toBeCompiled, otherFiles, harnessSettings, /* options */ tsConfigOptions, /* currentDirectory */ undefined);
+                const output = Harness.Compiler.compileFiles(
+                    toBeCompiled, otherFiles, harnessSettings, /*options*/ tsConfigOptions, /*currentDirectory*/ undefined);
 
                 options = output.options;
                 result = output.result;
-                program = output.program;
             });
 
             after(() => {
@@ -126,7 +124,6 @@ class CompilerBaselineRunner extends RunnerBase {
                 lastUnit = undefined;
                 rootDir = undefined;
                 result = undefined;
-                program = undefined;
                 options = undefined;
                 toBeCompiled = undefined;
                 otherFiles = undefined;
@@ -199,7 +196,7 @@ class CompilerBaselineRunner extends RunnerBase {
                         }
 
                         const declFileCompilationResult =
-                            Harness.Compiler.HarnessCompiler.compileDeclarationFiles(
+                            Harness.Compiler.compileDeclarationFiles(
                                 toBeCompiled, otherFiles, result, harnessSettings, options, /*currentDirectory*/ undefined);
 
                         if (declFileCompilationResult && declFileCompilationResult.declResult.errors.length) {
@@ -271,6 +268,7 @@ class CompilerBaselineRunner extends RunnerBase {
                     // These types are equivalent, but depend on what order the compiler observed
                     // certain parts of the program.
 
+                    const program = result.program;
                     const allFiles = toBeCompiled.concat(otherFiles).filter(file => !!program.getSourceFile(file.unitName));
 
                     const fullWalker = new TypeWriterWalker(program, /*fullTypeCheck*/ true);
