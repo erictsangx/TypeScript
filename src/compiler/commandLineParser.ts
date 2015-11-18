@@ -292,13 +292,15 @@ namespace ts {
             // this option can only be specified in tsconfig.json
             // use type = object to copy the value as-is
             name: "paths",
-            type: "object"
+            type: "object",
+            isTSConfigOnly: true
         },
         {
             // this option can only be specified in tsconfig.json
             // use type = object to copy the value as-is
             name: "rootDirs",
-            type: "object"
+            type: "object",
+            isTSConfigOnly: true
         }
     ];
 
@@ -359,31 +361,36 @@ namespace ts {
                     if (hasProperty(optionNameMap, s)) {
                         const opt = optionNameMap[s];
 
-                        // Check to see if no argument was provided (e.g. "--locale" is the last command-line argument).
-                        if (!args[i] && opt.type !== "boolean") {
-                            errors.push(createCompilerDiagnostic(Diagnostics.Compiler_option_0_expects_an_argument, opt.name));
+                        if (opt.isTSConfigOnly) {
+                            errors.push(createCompilerDiagnostic(Diagnostics.Option_0_can_only_be_specified_in_tsconfig_json_file, opt.name));
                         }
+                        else {
+                            // Check to see if no argument was provided (e.g. "--locale" is the last command-line argument).
+                            if (!args[i] && opt.type !== "boolean") {
+                                errors.push(createCompilerDiagnostic(Diagnostics.Compiler_option_0_expects_an_argument, opt.name));
+                            }
 
-                        switch (opt.type) {
-                            case "number":
-                                options[opt.name] = parseInt(args[i++]);
-                                break;
-                            case "boolean":
-                                options[opt.name] = true;
-                                break;
-                            case "string":
-                                options[opt.name] = args[i++] || "";
-                                break;
-                            // If not a primitive, the possible types are specified in what is effectively a map of options.
-                            default:
-                                let map = <Map<number>>opt.type;
-                                let key = (args[i++] || "").toLowerCase();
-                                if (hasProperty(map, key)) {
-                                    options[opt.name] = map[key];
-                                }
-                                else {
-                                    errors.push(createCompilerDiagnostic((<CommandLineOptionOfCustomType>opt).error));
-                                }
+                            switch (opt.type) {
+                                case "number":
+                                    options[opt.name] = parseInt(args[i++]);
+                                    break;
+                                case "boolean":
+                                    options[opt.name] = true;
+                                    break;
+                                case "string":
+                                    options[opt.name] = args[i++] || "";
+                                    break;
+                                // If not a primitive, the possible types are specified in what is effectively a map of options.
+                                default:
+                                    let map = <Map<number>>opt.type;
+                                    let key = (args[i++] || "").toLowerCase();
+                                    if (hasProperty(map, key)) {
+                                        options[opt.name] = map[key];
+                                    }
+                                    else {
+                                        errors.push(createCompilerDiagnostic((<CommandLineOptionOfCustomType>opt).error));
+                                    }
+                            }
                         }
                     }
                     else {

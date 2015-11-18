@@ -2434,6 +2434,7 @@ namespace ts {
     export interface CommandLineOptionBase {
         name: string;
         type: "string" | "number" | "boolean" | "object" | Map<number>;    // a value of a primitive type, or an object literal mapping named values to actual values
+        isTSConfigOnly?: boolean;                               // True if option can only be specified via tsconfig.json file
         isFilePath?: boolean;                                   // True if option value is a path or fileName
         shortName?: string;                                     // A short mnemonic for convenience - for instance, 'h' can be used in place of 'help'
         description?: DiagnosticMessage;                        // The message describing what the command line switch does

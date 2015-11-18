@@ -2276,6 +2276,10 @@
         "category": "Error",
         "code": 6063
     },
+    "Option '{0}' can only be specified in 'tsconfig.json' file.": {
+        "category": "Error",
+        "code": 6064
+    },
 
     "Enables experimental support for ES7 decorators.": {
         "category": "Message",
