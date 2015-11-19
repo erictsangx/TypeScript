@@ -717,13 +717,15 @@ namespace ts {
 
         return;
 
-        function serializeCompilerOptions(options: CompilerOptions): Map<string | number | boolean | PathSubstitutions | string[]> {
-            const result: Map<string | number | boolean | PathSubstitutions | string[]> = {};
+        function serializeCompilerOptions(options: CompilerOptions): Map<string | number | boolean> {
+            const result: Map<string | number | boolean> = {};
             const optionsNameMap = getOptionNameMap().optionNameMap;
 
             for (const name in options) {
                 if (hasProperty(options, name)) {
-                    const value = options[name];
+                    // tsconfig only options cannot be specified via command line,
+                    // so we can assume that only types that can appear here string | number | boolean
+                    const value = <string | number | boolean>options[name];
                     switch (name) {
                         case "init":
                         case "watch":

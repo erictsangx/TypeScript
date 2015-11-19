@@ -2314,7 +2314,9 @@ namespace ts {
         BaseUrl  = 3
     }
 
-    export type PathSubstitutions = Map<string[]>
+    export type RootPaths = string[];
+    export type PathSubstitutions = Map<string[]>;
+    export type TsConfigOnlyOptions = RootPaths | PathSubstitutions;
 
     export interface CompilerOptions {
         allowNonTsExtensions?: boolean;
@@ -2365,7 +2367,7 @@ namespace ts {
         forceConsistentCasingInFileNames?: boolean;
         baseUrl?: string;
         paths?: PathSubstitutions;
-        rootDirs?: string[];
+        rootDirs?: RootPaths;
         /* @internal */ stripInternal?: boolean;
 
         // Skip checking lib.d.ts to help speed up tests.
@@ -2373,7 +2375,7 @@ namespace ts {
         // inferred baseUrl - currently this will be set in 'parseJsonConfigFileContent' to 'baseDir'
         /* @internal */ inferredBaseUrl?: string;
 
-        [option: string]: string | number | boolean | PathSubstitutions | string[];
+        [option: string]: string | number | boolean | TsConfigOnlyOptions;
     }
 
     export const enum ModuleKind {
@@ -2434,17 +2436,17 @@ namespace ts {
     export interface CommandLineOptionBase {
         name: string;
         type: "string" | "number" | "boolean" | "object" | Map<number>;    // a value of a primitive type, or an object literal mapping named values to actual values
-        isTSConfigOnly?: boolean;                               // True if option can only be specified via tsconfig.json file
         isFilePath?: boolean;                                   // True if option value is a path or fileName
         shortName?: string;                                     // A short mnemonic for convenience - for instance, 'h' can be used in place of 'help'
         description?: DiagnosticMessage;                        // The message describing what the command line switch does
         paramType?: DiagnosticMessage;                          // The name to be used for a non-boolean option's parameter
         experimental?: boolean;
+        isTSConfigOnly?: boolean;                               // True if option can only be specified via tsconfig.json file
     }
 
     /* @internal */
     export interface CommandLineOptionOfPrimitiveType extends CommandLineOptionBase {
-        type: "string" | "number" | "boolean" | "object";
+        type: "string" | "number" | "boolean";
     }
 
     /* @internal */
@@ -2454,7 +2456,12 @@ namespace ts {
     }
 
     /* @internal */
-    export type CommandLineOption = CommandLineOptionOfCustomType | CommandLineOptionOfPrimitiveType;
+    export interface TsConfigOnlyOption extends CommandLineOptionBase {
+        type: "object";
+    }
+
+    /* @internal */
+    export type CommandLineOption = CommandLineOptionOfCustomType | CommandLineOptionOfPrimitiveType | TsConfigOnlyOption;
 
     /* @internal */
     export const enum CharacterCodes {
