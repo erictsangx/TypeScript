@@ -155,21 +155,18 @@ namespace ts {
         const candidate = normalizePath(combinePaths(containingDirectory, moduleName));
 
         if (options.rootDirs) {
-            const normalizedRootDirs = map(options.rootDirs, r => {
-                const normalizedRoot = getNormalizedAbsolutePath(r, baseUrl);
-                return endsWith(normalizedRoot, directorySeparator) ? normalizedRoot : normalizedRoot + directorySeparator;
-            });
-
-            let matchedRoot: string;
-            for (const root of normalizedRootDirs) {
-                if (startsWith(candidate, root)) {
-                    if (!matchedRoot || matchedRoot.length < root.length) {
-                        matchedRoot = root;
-                    }
+            let matchedPrefix: string;
+            for (const rootDir of options.rootDirs) {
+                let normalizedRoot = getNormalizedAbsolutePath(rootDir, baseUrl);
+                if (!endsWith(normalizedRoot, directorySeparator)) {
+                    normalizedRoot += directorySeparator;
+                }
+                if (startsWith(candidate, normalizedRoot) && (matchedPrefix === undefined || matchedPrefix.length < normalizedRoot.length)) {
+                    matchedPrefix = normalizedRoot;
                 }
             }
-            if (matchedRoot) {
-                const suffix = candidate.substr(matchedRoot.length);
+            if (matchedPrefix) {
+                const suffix = candidate.substr(matchedPrefix.length);
                 return baseUrlResolveNonRelativeModuleName(suffix, baseUrl, options, host);
             }
             return { resolvedModule: undefined, failedLookupLocations };
@@ -350,14 +347,20 @@ namespace ts {
         return i === 0 || (i === 1 && name.charCodeAt(0) === CharacterCodes.dot);
     }
 
-    function getNumberOfChars(str: string, ch: CharacterCodes): number {
-        let n = 0;
+    function hasZeroOrOneAsteriskCharacter(str: string): boolean {
+        let seenAsterisk = false;
         for (let i = 0; i < str.length; ++i) {
-            if (str.charCodeAt(i) === ch) {
-                n++;
+            if (str.charCodeAt(i) === CharacterCodes.asterisk) {
+                if (!seenAsterisk) {
+                    seenAsterisk = true;
+                }
+                else {
+                    // have already seen asterisk
+                    return false;
+                }
             }
         }
-        return n;
+        return true;
     }
 
     export function classicNameResolver(moduleName: string, containingFile: string, compilerOptions: CompilerOptions, host: ModuleResolutionHost): ResolvedModuleWithFailedLookupLocations {
@@ -1214,9 +1217,9 @@ namespace ts {
                 }
             }
             else if (options.moduleResolution === undefined) {
-                // if module resolution kind is not specified it is an error to have baseUrl and module === CommonJs 
+                // if module resolution kind is not specified it is an error to have baseUrl\paths\rootDirs and module === CommonJs 
                 // since the former one implies moduleResolutionKind to be BaseUrl and the latter one - Node 
-                if (options.module === ModuleKind.CommonJS && options.baseUrl) {
+                if (options.module === ModuleKind.CommonJS && (options.baseUrl || options.paths || options.rootDirs)) {
                     programDiagnostics.add(createCompilerDiagnostic(Diagnostics.Module_resolution_kind_cannot_be_determined_automatically_Please_specify_module_resolution_explicitly_via_moduleResolution_option));
                 }
             }
@@ -1238,11 +1241,11 @@ namespace ts {
                     if (!hasProperty(options.paths, key)) {
                         continue;
                     }
-                    if (getNumberOfChars(key, CharacterCodes.asterisk) > 1) {
+                    if (!hasZeroOrOneAsteriskCharacter(key)) {
                         programDiagnostics.add(createCompilerDiagnostic(Diagnostics.Pattern_0_can_have_at_most_one_Asterisk_character, key));
                     }
                     for (const subst of options.paths[key]) {
-                        if (getNumberOfChars(subst, CharacterCodes.asterisk) > 1) {
+                        if (!hasZeroOrOneAsteriskCharacter(subst)) {
                             programDiagnostics.add(createCompilerDiagnostic(Diagnostics.Substitution_0_in_pattern_1_in_can_have_at_most_one_Asterisk_character, subst, key));
                         }
                     }
